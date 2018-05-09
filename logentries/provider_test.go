@@ -1,10 +1,11 @@
 package logentries
 
 import (
-	"github.com/hashicorp/terraform/helper/schema"
-	"github.com/hashicorp/terraform/terraform"
 	"os"
 	"testing"
+
+	"github.com/hashicorp/terraform/helper/schema"
+	"github.com/hashicorp/terraform/terraform"
 )
 
 var testAccProviders map[string]terraform.ResourceProvider
@@ -28,7 +29,7 @@ func TestProvider_impl(t *testing.T) {
 }
 
 func testAccPreCheck(t *testing.T) {
-	if v := os.Getenv("LOGENTRIES_ACCOUNT_KEY"); v == "" {
-		t.Fatal("LOGENTRIES_ACCOUNT_KEY must be set for acceptance tests")
+	if v := os.Getenv("LOGENTRIES_TOKEN"); v == "" {
+		t.Fatal("LOGENTRIES_TOKEN must be set for acceptance tests")
 	}
 }

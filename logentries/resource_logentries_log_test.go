@@ -4,23 +4,15 @@ import (
 	"fmt"
 	"testing"
 
+	"github.com/depop/logentries"
 	"github.com/hashicorp/terraform/helper/acctest"
 	"github.com/hashicorp/terraform/helper/resource"
 	"github.com/hashicorp/terraform/terraform"
-	"github.com/logentries/le_goclient"
 	lexp "github.com/terraform-providers/terraform-provider-logentries/logentries/expect"
 )
 
-type LogResource struct {
-	Name            string `tfresource:"name"`
-	RetentionPeriod string `tfresource:"retention_period"`
-	Source          string `tfresource:"source"`
-	Token           string `tfresource:"token"`
-	Type            string `tfresource:"type"`
-}
-
 func TestAccLogentriesLog_Token(t *testing.T) {
-	var logResource LogResource
+	var logResource logentries.Log
 
 	logName := fmt.Sprintf("terraform-test-%s", acctest.RandString(8))
 	testAccLogentriesLogConfig := fmt.Sprintf(`
@@ -60,7 +52,7 @@ func TestAccLogentriesLog_Token(t *testing.T) {
 }
 
 func TestAccLogentriesLog_SourceApi(t *testing.T) {
-	var logResource LogResource
+	var logResource logentries.Log
 
 	logName := fmt.Sprintf("terraform-test-%s", acctest.RandString(8))
 	testAccLogentriesLogConfig := fmt.Sprintf(`
@@ -100,7 +92,7 @@ func TestAccLogentriesLog_SourceApi(t *testing.T) {
 }
 
 func TestAccLogentriesLog_SourceAgent(t *testing.T) {
-	var logResource LogResource
+	var logResource logentries.Log
 
 	logName := fmt.Sprintf("terraform-test-%s", acctest.RandString(8))
 	fileName := "/opt/foo"
@@ -143,7 +135,7 @@ func TestAccLogentriesLog_SourceAgent(t *testing.T) {
 }
 
 func TestAccLogentriesLog_RetentionPeriod1M(t *testing.T) {
-	var logResource LogResource
+	var logResource logentries.Log
 
 	logName := fmt.Sprintf("terraform-test-%s", acctest.RandString(8))
 	testAccLogentriesLogConfig := fmt.Sprintf(`
@@ -183,7 +175,7 @@ func TestAccLogentriesLog_RetentionPeriod1M(t *testing.T) {
 }
 
 func TestAccLogentriesLog_RetentionPeriodAccountDefault(t *testing.T) {
-	var logResource LogResource
+	var logResource logentries.Log
 
 	logName := fmt.Sprintf("terraform-test-%s", acctest.RandString(8))
 	testAccLogentriesLogConfig := fmt.Sprintf(`
@@ -222,7 +214,7 @@ func TestAccLogentriesLog_RetentionPeriodAccountDefault(t *testing.T) {
 }
 
 func TestAccLogentriesLog_RetentionPeriodAccountUnlimited(t *testing.T) {
-	var logResource LogResource
+	var logResource logentries.Log
 
 	logName := fmt.Sprintf("terraform-test-%s", acctest.RandString(8))
 	testAccLogentriesLogConfig := fmt.Sprintf(`
@@ -269,7 +261,7 @@ func testAccCheckLogentriesLogDestroy(s *terraform.State) error {
 			continue
 		}
 
-		resp, err := client.Log.Read(logentries.LogReadRequest{Key: rs.Primary.ID})
+		resp, err := client.Log.Read(&logentries.LogReadRequest{ID: rs.Primary.ID})
 
 		if err == nil {
 			return fmt.Errorf("Log still exists: %#v", resp)
@@ -293,18 +285,16 @@ func testAccCheckLogentriesLogExists(n string, fact interface{}) resource.TestCh
 
 		client := testAccProvider.Meta().(*logentries.Client)
 
-		resp, err := client.Log.Read(logentries.LogReadRequest{Key: rs.Primary.ID})
+		resp, err := client.Log.Read(&logentries.LogReadRequest{ID: rs.Primary.ID})
 
 		if err != nil {
 			return err
 		}
 
-		res := fact.(*LogResource)
+		res := fact.(*logentries.Log)
 		res.Name = resp.Name
-		res.RetentionPeriod, _ = enumForRetentionPeriod(resp.Retention)
-		res.Source = resp.Source
-		res.Token = resp.Token
-		res.Type = resp.Type
+		res.SourceType = resp.SourceType
+		res.Tokens = resp.Tokens
 
 		return nil
 	}

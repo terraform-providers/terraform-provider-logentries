@@ -4,8 +4,8 @@ import (
 	"log"
 	"strings"
 
+	logentries "github.com/depop/logentries"
 	"github.com/hashicorp/terraform/helper/schema"
-	logentries "github.com/logentries/le_goclient"
 )
 
 func resourceLogentriesLogSet() *schema.Resource {
@@ -21,10 +21,9 @@ func resourceLogentriesLogSet() *schema.Resource {
 				Type:     schema.TypeString,
 				Required: true,
 			},
-			"location": &schema.Schema{
+			"description": &schema.Schema{
 				Type:     schema.TypeString,
 				Optional: true,
-				Default:  "nonlocation",
 			},
 		},
 	}
@@ -32,28 +31,26 @@ func resourceLogentriesLogSet() *schema.Resource {
 
 func resourceLogentriesLogSetCreate(d *schema.ResourceData, meta interface{}) error {
 	client := meta.(*logentries.Client)
-	res, err := client.LogSet.Create(logentries.LogSetCreateRequest{
-		Name:     d.Get("name").(string),
-		Location: d.Get("location").(string),
+	res, err := client.LogSet.Create(&logentries.LogSetCreateRequest{
+		LogSet: logentries.LogSetFields{
+			Name: d.Get("name").(string),
+		},
 	})
 
 	if err != nil {
 		return err
 	}
 
-	d.SetId(res.Key)
+	d.SetId(res.ID)
 
 	return resourceLogentriesLogSetRead(d, meta)
 }
 
 func resourceLogentriesLogSetRead(d *schema.ResourceData, meta interface{}) error {
 	client := meta.(*logentries.Client)
-
-	res, err := client.LogSet.Read(logentries.LogSetReadRequest{
-		Key:  d.Id(),
-		Name: d.Get("name").(string),
+	res, err := client.LogSet.Read(&logentries.LogSetReadRequest{
+		ID: d.Id(),
 	})
-
 	if err != nil {
 		if strings.Contains(err.Error(), "No such log set") {
 			log.Printf("Logentries LogSet Not Found - Refreshing from State")
@@ -68,20 +65,17 @@ func resourceLogentriesLogSetRead(d *schema.ResourceData, meta interface{}) erro
 		return nil
 	}
 
-	// extra SetId call here is used by the LogSet data source, which simply
-	// re-uses this resourceLogentriesLogSetRead method
-	d.SetId(res.Key)
-	d.Set("location", res.Location)
-
 	return nil
 }
 
 func resourceLogentriesLogSetUpdate(d *schema.ResourceData, meta interface{}) error {
 	client := meta.(*logentries.Client)
-	_, err := client.LogSet.Update(logentries.LogSetUpdateRequest{
-		Key:      d.Id(),
-		Name:     d.Get("name").(string),
-		Location: d.Get("location").(string),
+	_, err := client.LogSet.Update(&logentries.LogSetUpdateRequest{
+		ID: d.Id(),
+		LogSet: logentries.LogSetFields{
+			Name:        d.Get("name").(string),
+			Description: d.Get("description").(string),
+		},
 	})
 	if err != nil {
 		return err
@@ -92,8 +86,8 @@ func resourceLogentriesLogSetUpdate(d *schema.ResourceData, meta interface{}) er
 
 func resourceLogentriesLogSetDelete(d *schema.ResourceData, meta interface{}) error {
 	client := meta.(*logentries.Client)
-	err := client.LogSet.Delete(logentries.LogSetDeleteRequest{
-		Key: d.Id(),
+	_, err := client.LogSet.Delete(&logentries.LogSetDeleteRequest{
+		ID: d.Id(),
 	})
 	return err
 }

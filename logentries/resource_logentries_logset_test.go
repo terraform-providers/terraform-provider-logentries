@@ -4,16 +4,15 @@ import (
 	"fmt"
 	"testing"
 
+	"github.com/depop/logentries"
 	"github.com/hashicorp/terraform/helper/acctest"
 	"github.com/hashicorp/terraform/helper/resource"
 	"github.com/hashicorp/terraform/terraform"
-	"github.com/logentries/le_goclient"
 	lexp "github.com/terraform-providers/terraform-provider-logentries/logentries/expect"
 )
 
 type LogSetResource struct {
-	Name     string `tfresource:"name"`
-	Location string `tfresource:"location"`
+	Name string `tfresource:"name"`
 }
 
 func TestAccLogentriesLogSet_Basic(t *testing.T) {
@@ -87,7 +86,7 @@ func testAccCheckLogentriesLogSetDestroy(s *terraform.State) error {
 			continue
 		}
 
-		resp, err := client.LogSet.Read(logentries.LogSetReadRequest{Key: rs.Primary.ID})
+		resp, err := client.LogSet.Read(&logentries.LogSetReadRequest{ID: rs.Primary.ID})
 
 		if err == nil {
 			return fmt.Errorf("Log set still exists: %#v", resp)
@@ -111,14 +110,13 @@ func testAccCheckLogentriesLogSetExists(resource string, fact interface{}) resou
 
 		client := testAccProvider.Meta().(*logentries.Client)
 
-		resp, err := client.LogSet.Read(logentries.LogSetReadRequest{Key: rs.Primary.ID})
+		resp, err := client.LogSet.Read(&logentries.LogSetReadRequest{ID: rs.Primary.ID})
 
 		if err != nil {
 			return err
 		}
 
 		res := fact.(*LogSetResource)
-		res.Location = resp.Location
 		res.Name = resp.Name
 
 		return nil

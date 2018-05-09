@@ -1,9 +1,9 @@
 package logentries
 
 import (
+	"github.com/depop/logentries"
 	"github.com/hashicorp/terraform/helper/schema"
 	"github.com/hashicorp/terraform/terraform"
-	"github.com/logentries/le_goclient"
 )
 
 // Provider returns a terraform.ResourceProvider.
@@ -15,13 +15,11 @@ func Provider() terraform.ResourceProvider {
 			"account_key": &schema.Schema{
 				Type:        schema.TypeString,
 				Required:    true,
-				DefaultFunc: schema.EnvDefaultFunc("LOGENTRIES_ACCOUNT_KEY", nil),
+				DefaultFunc: schema.EnvDefaultFunc("LOGENTRIES_TOKEN", nil),
 				Description: descriptions["account_key"],
 			},
 		},
-		DataSourcesMap: map[string]*schema.Resource{
-			"logentries_logset": dataSourceLogentriesLogSet(),
-		},
+
 		ResourcesMap: map[string]*schema.Resource{
 			"logentries_log":    resourceLogentriesLog(),
 			"logentries_logset": resourceLogentriesLogSet(),
@@ -40,5 +38,5 @@ func init() {
 }
 
 func providerConfigure(d *schema.ResourceData) (interface{}, error) {
-	return logentries.NewClient(d.Get("account_key").(string)), nil
+	return logentries.New(d.Get("account_key").(string)), nil
 }

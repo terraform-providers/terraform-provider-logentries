@@ -13,11 +13,6 @@ func dataSourceLogentriesLogSet() *schema.Resource {
 				Type:     schema.TypeString,
 				Required: true,
 			},
-			"location": &schema.Schema{
-				Type:     schema.TypeString,
-				Optional: true,
-				Default:  "nonlocation",
-			},
 		},
 	}
 }
