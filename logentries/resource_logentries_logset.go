@@ -65,6 +65,8 @@ func resourceLogentriesLogSetRead(d *schema.ResourceData, meta interface{}) erro
 		return nil
 	}
 
+	d.SetId(res.ID)
+
 	return nil
 }
 
